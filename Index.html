@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f0c29">
+<title>FL • Linguagem de Codificação</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg1:#0f0c29; --bg2:#302b63; --bg3:#24243e;
+    --accent:#00e5ff; --accent2:#a855f7; --accent3:#ff4d9d;
+    --text:#eaeaf7; --muted:#9a9ab8;
+    --card:rgba(255,255,255,.06);
+    --border:rgba(255,255,255,.13);
+  }
+  html,body{min-height:100%}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,'Roboto',sans-serif;
+    background:linear-gradient(140deg,var(--bg1) 0%,var(--bg2) 50%,var(--bg3) 100%);
+    background-attachment:fixed;
+    color:var(--text);
+    min-height:100vh;
+    overflow-x:hidden;
+    padding:16px 14px 40px;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- Orbes de fundo ---------- */
+  .bg-orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .bg-orbs span{position:absolute;border-radius:50%;filter:blur(70px);opacity:.35}
+  .bg-orbs span:nth-child(1){width:260px;height:260px;background:#00e5ff;top:-90px;left:-80px;animation:flutua 14s ease-in-out infinite}
+  .bg-orbs span:nth-child(2){width:300px;height:300px;background:#a855f7;bottom:-110px;right:-100px;animation:flutua 18s ease-in-out infinite reverse}
+  .bg-orbs span:nth-child(3){width:200px;height:200px;background:#ff4d9d;top:45%;left:55%;animation:flutua 22s ease-in-out infinite}
+  @keyframes flutua{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-35px) scale(1.15)}}
+
+  .app{position:relative;z-index:1;max-width:520px;margin:0 auto}
+
+  /* ---------- Telas ---------- */
+  .screen{display:none}
+  .screen.active{display:block;animation:entra .38s cubic-bezier(.2,.8,.3,1)}
+  @keyframes entra{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+  /* ---------- HOME ---------- */
+  .hero{text-align:center;padding:26px 0 26px}
+  .logo{
+    width:82px;height:82px;margin:0 auto 16px;border-radius:24px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:30px;font-weight:800;letter-spacing:1px;color:#08111a;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 12px 40px rgba(0,229,255,.35),0 0 0 1px rgba(255,255,255,.15) inset;
+    animation:pulsa 3.2s ease-in-out infinite;
+  }
+  @keyframes pulsa{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .hero h1{font-size:27px;font-weight:800;letter-spacing:-.5px}
+  .hero h1 span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--muted);font-size:14.5px;margin-top:8px;line-height:1.5}
+
+  .menu{display:flex;flex-direction:column;gap:14px;margin-top:8px}
+  .menu-btn{
+    display:flex;align-items:center;gap:14px;width:100%;
+    padding:17px 16px;border-radius:20px;border:1px solid var(--border);
+    background:var(--card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    color:var(--text);text-align:left;cursor:pointer;font-family:inherit;
+    transition:transform .18s ease,box-shadow .25s ease,border-color .25s ease;
+    box-shadow:0 6px 22px rgba(0,0,0,.28);
+    position:relative;overflow:hidden;
+  }
+  .menu-btn::after{
+    content:'';position:absolute;inset:0;border-radius:20px;
+    background:linear-gradient(120deg,transparent 40%,rgba(255,255,255,.09) 50%,transparent 60%);
+    transform:translateX(-120%);transition:transform .6s ease;
+  }
+  .menu-btn:active{transform:scale(.965)}
+  .menu-btn:active::after{transform:translateX(120%)}
+  .menu-btn .ico{
+    width:50px;height:50px;flex:0 0 50px;border-radius:15px;
+    display:flex;align-items:center;justify-content:center;font-size:23px;
+    background:linear-gradient(135deg,rgba(0,229,255,.18),rgba(168,85,247,.18));
+    border:1px solid var(--border);
+  }
+  .menu-btn .txt{flex:1;display:flex;flex-direction:column;gap:3px}
+  .menu-btn strong{font-size:16.5px;font-weight:700;letter-spacing:.2px}
+  .menu-btn small{font-size:12.5px;color:var(--muted)}
+  .menu-btn .chev{font-size:26px;color:var(--muted);line-height:1}
+
+  .foot{text-align:center;color:var(--muted);font-size:12.5px;margin-top:28px;line-height:1.7}
+  .foot code{color:var(--accent);font-family:'Courier New',monospace;font-weight:700}
+
+  /* ---------- Cabeçalho das telas ---------- */
+  .topbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-top:4px}
+  .back{
+    width:44px;height:44px;flex:0 0 44px;border-radius:14px;border:1px solid var(--border);
+    background:var(--card);color:var(--text);font-size:22px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:.2s;
+  }
+  .back:active{transform:scale(.9);background:rgba(255,255,255,.12)}
+  .topbar h2{font-size:19px;font-weight:700}
+  .topbar p{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:20px;
+    padding:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    box-shadow:0 8px 26px rgba(0,0,0,.25);margin-bottom:14px;
+  }
+  .label{
+    font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+    color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:7px;
+  }
+  .label .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  .label.roxo .dot{background:var(--accent2);box-shadow:0 0 10px var(--accent2)}
+
+  textarea,input[type=text]{
+    width:100%;padding:14px;border-radius:14px;
+    border:1px solid var(--border);background:rgba(0,0,0,.28);
+    color:var(--text);font-size:16px;font-family:inherit;
+    outline:none;transition:.22s;resize:vertical;
+  }
+  textarea{min-height:110px;line-height:1.5}
+  textarea::placeholder,input::placeholder{color:#6f6f92}
+  textarea:focus,input[type=text]:focus{
+    border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,.13);
+    background:rgba(0,0,0,.38);
+  }
+
+  .acoes{display:flex;gap:10px;margin-top:12px}
+  .btn{
+    flex:1;padding:14px;border-radius:14px;border:none;cursor:pointer;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.3px;
+    transition:transform .15s ease,box-shadow .25s ease,opacity .2s;
+  }
+  .btn:active{transform:scale(.96)}
+  .btn-primary{
+    color:#04141b;
+    background:linear-gradient(135deg,var(--accent),#6ee7ff);
+    box-shadow:0 8px 24px rgba(0,229,255,.3);
+  }
+  .btn-ghost{
+    flex:0 0 auto;padding:14px 18px;color:var(--text);
+    background:rgba(255,255,255,.07);border:1px solid var(--border);
+  }
+  .btn-ghost:active{background:rgba(255,255,255,.14)}
+
+  /* ---------- Saída ---------- */
+  .saida{
+    min-height:76px;padding:14px;border-radius:14px;
+    background:rgba(0,0,0,.34);border:1px dashed rgba(0,229,255,.32);
+    font-family:'Courier New',monospace;font-size:17px;line-height:1.6;
+    word-break:break-word;white-space:pre-wrap;color:#b9f6ff;
+    letter-spacing:.5px;
+  }
+  .saida.vazia{color:#5f5f80;font-style:italic;font-family:inherit;font-size:14px;letter-spacing:0}
+  .saida .apos{color:var(--accent2);font-weight:700}
+
+  .mini-info{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6}
+  .mini-info b{color:var(--accent)}
+
+  /* ---------- Passo a passo ---------- */
+  .passos{display:flex;flex-direction:column;gap:9px;margin-top:4px}
+  .passo{
+    display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:13px;
+    background:rgba(255,255,255,.05);border:1px solid var(--border);
+    opacity:0;animation:surge .35s ease forwards;
+  }
+  @keyframes surge{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+  .passo .n{
+    width:26px;height:26px;flex:0 0 26px;border-radius:8px;font-size:12px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;color:#04141b;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+  }
+  .passo .l{
+    font-weight:800;font-size:16px;min-width:26px;text-align:center;
+    color:#fff;background:rgba(255,255,255,.08);border-radius:8px;padding:3px 7px;
+  }
+  .passo .seta{color:var(--muted);font-size:15px}
+  .passo .v{
+    font-family:'Courier New',monospace;font-weight:800;font-size:16px;
+    color:var(--accent);margin-left:auto;
+  }
+  .passo.mantem .v{color:var(--muted);font-size:12px;font-family:inherit;font-weight:600}
+
+  .passo-final{
+    margin-top:14px;padding:14px;border-radius:14px;
+    background:linear-gradient(135deg,rgba(0,229,255,.14),rgba(168,85,247,.14));
+    border:1px solid rgba(0,229,255,.35);
+  }
+  .passo-final strong{display:block;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+  .passo-final code{
+    font-family:'Courier New',monospace;font-size:18px;color:#b9f6ff;
+    word-break:break-word;letter-spacing:.6px;
+  }
+
+  .vazio{color:var(--muted);font-size:14px;font-style:italic;text-align:center;padding:16px 0}
+
+  /* ---------- Alfabeto ---------- */
+  .alfabeto{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px}
+  .alf{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    padding:9px 4px;border-radius:12px;background:rgba(255,255,255,.05);
+    border:1px solid var(--border);transition:.2s;
+  }
+  .alf:active{transform:scale(.92);border-color:var(--accent)}
+  .alf b{font-size:15px;color:#fff}
+  .alf i{font-style:normal;font-family:'Courier New',monospace;font-size:13px;color:var(--accent);font-weight:700}
+
+  .regra{display:flex;gap:12px;margin-bottom:16px}
+  .regra .num{
+    width:34px;height:34px;flex:0 0 34px;border-radius:11px;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#04141b;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+  }
+  .regra .conteudo{flex:1}
+  .regra h4{font-size:14.5px;margin-bottom:5px}
+  .regra p{font-size:13.2px;color:var(--muted);line-height:1.62}
+  .regra code{
+    font-family:'Courier New',monospace;color:#b9f6ff;background:rgba(0,229,255,.1);
+    padding:1.5px 6px;border-radius:6px;font-size:13px;
+  }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,90px);
+    background:rgba(20,20,40,.95);border:1px solid var(--border);
+    color:var(--text);padding:12px 22px;border-radius:30px;font-size:14px;font-weight:600;
+    box-shadow:0 10px 34px rgba(0,0,0,.5);z-index:99;
+    transition:transform .35s cubic-bezier(.2,.9,.3,1.2),opacity .3s;opacity:0;
+    backdrop-filter:blur(10px);pointer-events:none;
+  }
+  .toast.show{transform:translate(-50%,0);opacity:1}
+</style>
+</head>
+<body>
+
+<div class="bg-orbs"><span></span><span></span><span></span></div>
+
+<main class="app">
+
+  <!-- ================= HOME ================= -->
+  <section id="tela-home" class="screen active">
+    <div class="hero">
+      <div class="logo">FL</div>
+      <h1>Linguagem <span>FL</span></h1>
+      <p>Transforme letras em números e números em letras.</p>
+    </div>
+
+    <nav class="menu">
+      <button class="menu-btn" data-go="tela-cod">
+        <span class="ico">🔐</span>
+        <span class="txt"><strong>Codificar</strong><small>Letras ➜ Números</small></span>
+        <span class="chev">›</span>
+      </button>
+
+      <button class="menu-btn" data-go="tela-dec">
+        <span class="ico">🔓</span>
+        <span class="txt"><strong>DesCodificar</strong><small>Números ➜ Letras</small></span>
+        <span class="chev">›</span>
+      </button>
+
+      <button class="menu-btn" data-go="tela-passo">
+        <span class="ico">📖</span>
+        <span class="txt"><strong>Passo a Passo</strong><small>Aprenda como funciona</small></span>
+        <span class="chev">›</span>
+      </button>
+    </nav>
+
+    <p class="foot">
+      <code>A=1 · B=2 · C=3 · … · Z=26</code><br>
+      100% offline • roda direto no Acode
+    </p>
+  </section>
+
+  <!-- ================= CODIFICAR ================= -->
+  <section id="tela-cod" class="screen">
+    <div class="topbar">
+      <button class="back" data-go="tela-home">‹</button>
+      <div>
+        <h2>Codificar</h2>
+        <p>Letras ➜ Números</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label"><span class="dot"></span>Texto original</div>
+      <textarea id="in-cod" placeholder="Digite aqui... Ex: Eai" spellcheck="false"></textarea>
+      <div class="acoes">
+        <button class="btn btn-primary" id="btn-cod">Codificar</button>
+        <button class="btn btn-ghost" id="limpar-cod">🗑</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label roxo"><span class="dot"></span>Resultado em FL</div>
+      <div class="saida vazia" id="out-cod">O código aparecerá aqui…</div>
+      <div class="acoes">
+        <button class="btn btn-ghost" style="flex:1" id="copiar-cod">📋 Copiar código</button>
+      </div>
+      <p class="mini-info">O apóstrofo <b>'</b> separa números de 2 dígitos para evitar confusão.</p>
+    </div>
+  </section>
+
+  <!-- ================= DESCODIFICAR ================= -->
+  <section id="tela-dec" class="screen">
+    <div class="topbar">
+      <button class="back" data-go="tela-home">‹</button>
+      <div>
+        <h2>DesCodificar</h2>
+        <p>Números ➜ Letras</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label"><span class="dot"></span>Código FL</div>
+      <textarea id="in-dec" placeholder="Digite aqui... Ex: 5'1'9" spellcheck="false"></textarea>
+      <div class="acoes">
+        <button class="btn btn-primary" id="btn-dec">DesCodificar</button>
+        <button class="btn btn-ghost" id="limpar-dec">🗑</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label roxo"><span class="dot"></span>Mensagem revelada</div>
+      <div class="saida vazia" id="out-dec">A mensagem aparecerá aqui…</div>
+      <div class="acoes">
+        <button class="btn btn-ghost" style="flex:1" id="copiar-dec">📋 Copiar mensagem</button>
+      </div>
+      <p class="mini-info">Aceita apóstrofos, espaços, vírgulas ou traços como separadores.</p>
+    </div>
+  </section>
+
+  <!-- ================= PASSO A PASSO ================= -->
+  <section id="tela-passo" class="screen">
+    <div class="topbar">
+      <button class="back" data-go="tela-home">‹</button>
+      <div>
+        <h2>Passo a Passo</h2>
+        <p>Entenda a linguagem FL</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label"><span class="dot"></span>Como funciona</div>
+
+      <div class="regra">
+        <div class="num">1</div>
+        <div class="conteudo">
+          <h4>Cada letra vira um número</h4>
+          <p>Usamos a posição da letra no alfabeto: <code>A=1</code>, <code>B=2</code>, <code>C=3</code> … <code>Z=26</code>.</p>
+        </div>
+      </div>
+
+      <div class="regra">
+        <div class="num">2</div>
+        <div class="conteudo">
+          <h4>Números de 2 dígitos precisam de separador</h4>
+          <p>Usamos o apóstrofo <code>'</code> entre os números para não juntar tudo. Sem ele, <code>1'15'2'1</code> viraria <code>11521</code> e ninguém saberia onde cada letra começa.</p>
+        </div>
+      </div>
+
+      <div class="regra">
+        <div class="num">3</div>
+        <div class="conteudo">
+          <h4>Exemplos</h4>
+          <p><code>Eai</code> ➜ <code>5'1'9</code><br>
+             <code>aoba</code> ➜ <code>1'15'2'1</code><br>
+             <code>FL</code> ➜ <code>6'12</code></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label roxo"><span class="dot"></span>Teste você mesmo</div>
+      <input type="text" id="passo-input" placeholder="Digite uma palavra…" spellcheck="false">
+      <div class="acoes">
+        <button class="btn btn-primary" id="btn-passo">Gerar passo a passo</button>
+      </div>
+      <div class="passos" id="passos-lista">
+        <p class="vazio">Digite uma palavra e veja a mágica acontecer ✨</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label"><span class="dot"></span>Tabela do alfabeto</div>
+      <div class="alfabeto" id="tabela-alf"></div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast">Copiado!</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================== NÚCLEO DA LINGUAGEM FL ================== */
+  const ALFABETO = "abcdefghijklmnopqrstuvwxyz";
+
+  // Remove acentos: á -> a, ç -> c, etc.
+  function normalizar(txt){
+    return txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  // Letra -> número (1..26) ou null
+  function letraParaNum(ch){
+    const i = ALFABETO.indexOf(ch.toLowerCase());
+    return i >= 0 ? i + 1 : null;
+  }
+
+  // Número -> letra (A..Z) ou null
+  function numParaLetra(n){
+    if(n < 1 || n > 26) return null;
+    return ALFABETO[n - 1];
+  }
+
+  /* ---------- CODIFICAR ---------- */
+  function codificar(texto){
+    const t = normalizar(texto);
+    let saida = "";
+    let ultimoEraNumero = false;
+
+    for(const ch of t){
+      const n = letraParaNum(ch);
+      if(n !== null){
+        if(ultimoEraNumero) saida += "'";   // separador só entre números
+        saida += n;
+        ultimoEraNumero = true;
+      }else{
+        saida += ch;                          // espaço, vírgula, etc. passam direto
+        ultimoEraNumero = false;
+      }
+    }
+    return saida;
+  }
+
+  /* ---------- DESCODIFICAR ---------- */
+  // Quebra um bloco de dígitos em números válidos (1..26)
+  function decodificarBloco(bloco){
+    let res = "";
+    let k = 0;
+    while(k < bloco.length){
+      // tenta ler 2 dígitos primeiro
+      if(k + 2 <= bloco.length){
+        const dois = bloco.substr(k, 2);
+        const v = parseInt(dois, 10);
+        if(bloco[k] !== "0" && v >= 1 && v <= 26){
+          res += numParaLetra(v);
+          k += 2;
+          continue;
+        }
+      }
+      // senão lê 1 dígito
+      const um = parseInt(bloco[k], 10);
+      if(um >= 1 && um <= 26){
+        res += numParaLetra(um);
+      }else{
+        res += bloco[k]; // caractere inválido: mantém
+      }
+      k += 1;
+    }
+    return res;
+  }
+
+  function descodificar(codigo){
+    let saida = "";
+    let i = 0;
+    const s = String(codigo);
+    while(i < s.length){
+      if(/\d/.test(s[i])){
+        let j = i;
+        while(j < s.length && /\d/.test(s[j])) j++;
+        saida += decodificarBloco(s.slice(i, j));
+        i = j;
+      }else{
+        saida += s[i];
+        i++;
+      }
+    }
+    return saida;
+  }
+
+  /* ================== NAVEGAÇÃO ================== */
+  const telas = document.querySelectorAll(".screen");
+
+  function irPara(id){
+    telas.forEach(t => t.classList.toggle("active", t.id === id));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  document.querySelectorAll("[data-go]").forEach(el => {
+    el.addEventListener("click", () => irPara(el.dataset.go));
+  });
+
+  /* ================== TOAST ================== */
+  let toastTimer = null;
+  const toastEl = document.getElementById("toast");
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
+  }
+
+  /* ================== COPIAR ================== */
+  function copiar(texto){
+    if(!texto) { toast("Nada para copiar"); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(texto)
+        .then(() => toast("Copiado! ✔"))
+        .catch(() => copiarFallback(texto));
+    }else{
+      copiarFallback(texto);
+    }
+  }
+  function copiarFallback(texto){
+    const ta = document.createElement("textarea");
+    ta.value = texto;
+    ta.style.position = "fixed";
+    ta.style.top = "-1000px";
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand("copy"); toast("Copiado! ✔"); }
+    catch(e){ toast("Não foi possível copiar"); }
+      document.body.removeChild(ta);
+  }
+
+  /* ================== TELA CODIFICAR ================== */
+  const inCod   = document.getElementById("in-cod");
+  const outCod  = document.getElementById("out-cod");
+
+  function renderCod(){
+    const txt = inCod.value;
+    if(!txt.trim()){
+      outCod.textContent = "O código aparecerá aqui…";
+      outCod.classList.add("vazia");
+      return;
+    }
+    outCod.classList.remove("vazia");
+    outCod.textContent = codificar(txt);
+  }
+
+  inCod.addEventListener("input", renderCod);
+  document.getElementById("btn-cod").addEventListener("click", () => {
+    renderCod();
+    if(inCod.value.trim()) toast("Codificado! 🔐");
+  });
+  document.getElementById("limpar-cod").addEventListener("click", () => {
+    inCod.value = ""; renderCod(); inCod.focus();
+  });
+  document.getElementById("copiar-cod").addEventListener("click", () => {
+    copiar(inCod.value.trim() ? codificar(inCod.value) : "");
+  });
+
+  /* ================== TELA DESCODIFICAR ================== */
+  const inDec  = document.getElementById("in-dec");
+  const outDec = document.getElementById("out-dec");
+
+  function renderDec(){
+    const txt = inDec.value;
+    if(!txt.trim()){
+      outDec.textContent = "A mensagem aparecerá aqui…";
+      outDec.classList.add("vazia");
+      return;
+    }
+    outDec.classList.remove("vazia");
+    outDec.textContent = descodificar(txt);
+  }
+
+  inDec.addEventListener("input", renderDec);
+  document.getElementById("btn-dec").addEventListener("click", () => {
+    renderDec();
+    if(inDec.value.trim()) toast("Descodificado! 🔓");
+  });
+  document.getElementById("limpar-dec").addEventListener("click", () => {
+    inDec.value = ""; renderDec(); inDec.focus();
+  });
+  document.getElementById("copiar-dec").addEventListener("click", () => {
+    copiar(inDec.value.trim() ? descodificar(inDec.value) : "");
+  });
+
+  /* ================== TELA PASSO A PASSO ================== */
+  const passoInput = document.getElementById("passo-input");
+  const passosLista = document.getElementById("passos-lista");
+
+  function gerarPassos(){
+    const bruto = passoInput.value;
+    passosLista.innerHTML = "";
+
+    if(!bruto.trim()){
+      passosLista.innerHTML = '<p class="vazio">Digite uma palavra e veja a mágica acontecer ✨</p>';
+      return;
+    }
+
+    const texto = normalizar(bruto);
+    let resultado = "";
+    let ultimoEraNumero = false;
+    let contador = 1;
+    let indiceAnim = 0;
+
+    for(const ch of texto){
+      const n = letraParaNum(ch);
+      const div = document.createElement("div");
+
+      if(n !== null){
+        if(ultimoEraNumero) resultado += "'";
+        resultado += n;
+        ultimoEraNumero = true;
+
+        div.className = "passo";
+        div.style.animationDelay = (indiceAnim * 0.07) + "s";
+        div.innerHTML =
+          '<span class="n">' + (contador++) + '</span>' +
+          '<span class="l">' + ch.toUpperCase() + '</span>' +
+          '<span class="seta">➜</span>' +
+          '<span class="v">' + n + '</span>';
+      }else{
+        resultado += ch;
+        ultimoEraNumero = false;
+
+        div.className = "passo mantem";
+        div.style.animationDelay = (indiceAnim * 0.07) + "s";
+        const simbolo = ch === " " ? "␣" : ch;
+        div.innerHTML =
+          '<span class="n">•</span>' +
+          '<span class="l">' + simbolo + '</span>' +
+          '<span class="seta">➜</span>' +
+          '<span class="v">mantém</span>';
+      }
+
+      passosLista.appendChild(div);
+      indiceAnim++;
+    }
+
+    const final = document.createElement("div");
+    final.className = "passo-final";
+    final.style.animation = "surge .4s ease " + (indiceAnim * 0.07 + 0.1) + "s forwards";
+    final.style.opacity = "0";
+    final.innerHTML = "<strong>Resultado final</strong><code>" + resultado + "</code>";
+    passosLista.appendChild(final);
+  }
+
+  document.getElementById("btn-passo").addEventListener("click", gerarPassos);
+  passoInput.addEventListener("keydown", e => {
+    if(e.key === "Enter"){ e.preventDefault(); gerarPassos(); }
+  });
+
+  /* ---------- Tabela do alfabeto ---------- */
+  (function montarTabela(){
+    const cont = document.getElementById("tabela-alf");
+    let html = "";
+    for(let i = 1; i <= 26; i++){
+      html += '<div class="alf"><b>' + ALFABETO[i-1].toUpperCase() + '</b><i>' + i + '</i></div>';
+    }
+    cont.innerHTML = html;
+  })();
+
+  /* ================== EXTRAS ================== */
+  // Botão físico "voltar" do Android / navegador
+  history.pushState({ tela: "tela-home" }, "");
+  window.addEventListener("popstate", () => {
+    const ativa = document.querySelector(".screen.active");
+    if(ativa && ativa.id !== "tela-home"){
+      irPara("tela-home");
+      history.pushState({ tela: "tela-home" }, "");
+    }
+  });
+
+  // Foca o campo ao abrir cada tela
+  document.querySelectorAll("[data-go]").forEach(el => {
+    el.addEventListener("click", () => {
+      const id = el.dataset.go;
+      setTimeout(() => {
+        if(id === "tela-cod") inCod.focus();
+        if(id === "tela-dec") inDec.focus();
+        if(id === "tela-passo") passoInput.focus();
+      }, 320);
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
